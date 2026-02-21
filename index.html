@@ -164,6 +164,7 @@
             border-radius: 12px; 
             border: 1px solid #333; 
             transition: 0.3s;
+            position: relative;
         }
 
         .item-card:hover { border-color: var(--n-red); transform: scale(1.05); }
@@ -217,10 +218,10 @@
 
                 <div id="manual-prompt" style="border: 2px solid var(--n-red); background: #111; padding: 30px; border-radius: 15px; display: none;">
                     <h3 id="prompt-title" style="margin:0; font-size: 22px;">Content Identified</h3>
-                    <p style="color:#888;">Siguraduhin ang thumbnail bago i-push sa database:</p>
+                    <p id="prompt-desc" style="color:#888;">Siguraduhin ang thumbnail bago i-push sa database:</p>
                     <input type="text" id="manual-img-url" class="input-dark" placeholder="Paste Custom Thumbnail URL (Optional)">
                     <div style="display:flex; gap:15px; margin-top:10px;">
-                        <button class="btn btn-green" id="btn-proceed" style="flex:3; font-size:16px;">🚀 DEPLOY TO LIVE DATABASE</button>
+                        <button class="btn btn-green" id="btn-proceed" style="flex:3; font-size:16px;">🚀 DEPLOY FULL SERIES</button>
                         <button class="btn btn-red" onclick="cancelTrend()" style="flex:1;">ABORT</button>
                     </div>
                 </div>
@@ -259,12 +260,12 @@
                             <option value="KDrama">All KDrama</option>
                             <option value="Series">All Series</option>
                         </select>
-                        <button class="btn btn-red" onclick="bulkDeleteByCat()">🔥 WIPE ENTIRE CATEGORY</button>
+                        <button class="btn btn-red" style="width:100%;" onclick="bulkDeleteByCat()">🔥 WIPE ENTIRE CATEGORY</button>
                     </div>
                     <div style="background:#222; padding:25px; border-radius:12px;">
                         <span style="font-size:12px; color:#888; letter-spacing:1px;">SEARCH & DESTROY</span>
                         <input type="text" id="trash-search-input" class="input-dark" style="margin-top:10px;" placeholder="Search exact title to delete...">
-                        <button class="btn btn-orange" onclick="searchAndDestroy()">🎯 DESTROY MATCHES</button>
+                        <button class="btn btn-orange" style="width:100%;" onclick="searchAndDestroy()">🎯 DESTROY MATCHES</button>
                     </div>
                 </div>
                 
@@ -314,7 +315,7 @@
             document.querySelectorAll('.tab-section').forEach(t => t.classList.remove('tab-active'));
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             document.getElementById(id).classList.add('tab-active');
-            el.classList.add('active');
+            if(el) el.classList.add('active');
         }
 
         function openTrashTab(el) {
@@ -341,12 +342,22 @@
             let targetItem = null;
             for (let item of data.results) {
                 const title = item.name || item.title;
-                const check = await db.ref('content/movies').orderByChild('title').equalTo(type === 'movie' ? title : `${title} - S1 E1`).once('value');
+                // Check if S1 E1 exists for series or the title for movies
+                const searchTitle = type === 'movie' ? title : `${title} - S1 E1`;
+                const check = await db.ref('content/movies').orderByChild('title').equalTo(searchTitle).once('value');
                 if (!check.exists()) { targetItem = item; break; }
             }
 
             if(targetItem) {
-                document.getElementById('prompt-title').innerText = `TARGET ACQUIRED: ${targetItem.name || targetItem.title}`;
+                const title = targetItem.name || targetItem.title;
+                document.getElementById('prompt-title').innerText = `TARGET ACQUIRED: ${title}`;
+                if(type === 'tv') {
+                    document.getElementById('prompt-desc').innerText = "I-uupload nito LAHAT ng Seasons at Episodes ng seryeng ito.";
+                    document.getElementById('btn-proceed').innerText = "🚀 DEPLOY FULL SERIES (ALL SEASONS)";
+                } else {
+                    document.getElementById('prompt-desc').innerText = "I-uupload nito ang movie na ito.";
+                    document.getElementById('btn-proceed').innerText = "🚀 DEPLOY MOVIE";
+                }
                 document.getElementById('manual-prompt').style.display = 'block';
                 document.getElementById('manual-img-url').value = "";
                 document.getElementById('btn-proceed').onclick = () => executeTrend(targetItem, type, label, document.getElementById('manual-img-url').value);
@@ -363,44 +374,92 @@
             const title = item.name || item.title;
 
             if(type === 'movie') {
-                await db.ref('content/movies').push({ title, img: poster, link: `https://vidsrc.me/embed/movie?tmdb=${item.id}`, category: 'Movie', views: 0 });
+                await db.ref('content/movies').push({ title, img: poster, link: `https://vidsrc.me/embed/movie?tmdb=${item.id}`, category: 'Movie', views: 0, timestamp: Date.now() });
                 status.innerHTML = `✅ [MOVIE] ${title.toUpperCase()} DEPLOYED SUCCESSFULLY.`;
             } else {
-                status.innerHTML = `🚀 DEPLOYING SERIES: ${title.toUpperCase()} (SEASON 1)...<br>`;
-                const sRes = await fetch(`https://api.themoviedb.org/3/tv/${item.id}/season/1?api_key=${TMDB_API}`);
-                const sData = await sRes.json();
-                for(let ep of sData.episodes) {
-                    await db.ref('content/movies').push({ title: `${title} - S1 E${ep.episode_number}`, img: poster, link: `https://vidsrc.me/embed/tv?tmdb=${item.id}&season=1&episode=${ep.episode_number}`, category: label, views: 0 });
-                    status.innerHTML += `📦 EPISODE ${ep.episode_number} COMMITTED.<br>`;
-                    status.scrollTop = status.scrollHeight;
+                status.innerHTML = `🚀 ANALYZING SERIES: ${title.toUpperCase()}...<br>`;
+                
+                try {
+                    // Get full series details to find total seasons
+                    const fullRes = await fetch(`https://api.themoviedb.org/3/tv/${item.id}?api_key=${TMDB_API}`);
+                    const fullData = await fullRes.json();
+                    const totalSeasons = fullData.number_of_seasons;
+
+                    status.innerHTML += `📡 FOUND ${totalSeasons} SEASONS. STARTING BULK UPLOAD...<br>`;
+
+                    for(let s = 1; s <= totalSeasons; s++) {
+                        status.innerHTML += `📂 FETCHING SEASON ${s}...<br>`;
+                        status.scrollTop = status.scrollHeight;
+
+                        const sRes = await fetch(`https://api.themoviedb.org/3/tv/${item.id}/season/${s}?api_key=${TMDB_API}`);
+                        const sData = await sRes.json();
+
+                        if(sData.episodes) {
+                            for(let ep of sData.episodes) {
+                                await db.ref('content/movies').push({ 
+                                    title: `${title} - S${s} E${ep.episode_number}`, 
+                                    img: poster, 
+                                    link: `https://vidsrc.me/embed/tv?tmdb=${item.id}&season=${s}&episode=${ep.episode_number}`, 
+                                    category: label, 
+                                    views: 0,
+                                    timestamp: Date.now()
+                                });
+                                status.innerHTML += `  ✅ SEASON ${s} EPISODE ${ep.episode_number} COMMITTED.<br>`;
+                                status.scrollTop = status.scrollHeight;
+                            }
+                        }
+                    }
+                    status.innerHTML += `<br>✨ TOTAL DEPLOYMENT OF "${title.toUpperCase()}" COMPLETE!`;
+                } catch (e) {
+                    status.innerHTML += `<br>❌ ERROR DURING DEPLOYMENT: ${e.message}`;
                 }
-                status.innerHTML += `✨ FULL SEASON LIVE.`;
             }
         }
 
         function cancelTrend() { document.getElementById('manual-prompt').style.display = 'none'; }
 
+        // --- ITO ANG KADUGTONG NG POSTMANUAL FUNCTION ---
         function postManual() {
-            const t = document.getElementById('m-title').value, i = document.getElementById('m-img').value, l = document.getElementById('m-link').value, c = document.getElementById('m-cat').value;
+            const t = document.getElementById('m-title').value;
+            const i = document.getElementById('m-img').value;
+            const l = document.getElementById('m-link').value;
+            const c = document.getElementById('m-cat').value;
+            
             if(!t || !l) return alert("Fill up Title and Link!");
-            db.ref('content/movies').push({ title: t, img: i, link: l, category: c, views: 0 }).then(() => {
-                alert("Posted Manual Content!");
+            
+            db.ref('content/movies').push({ 
+                title: t, 
+                img: i || 'https://via.placeholder.com/200x300', 
+                link: l, 
+                category: c, 
+                views: 0, 
+                timestamp: Date.now() 
+            }).then(() => {
+                alert("✅ Manual Post Successful!");
                 document.getElementById('m-title').value = "";
                 document.getElementById('m-img').value = "";
                 document.getElementById('m-link').value = "";
             });
         }
 
-        // DELETED PANEL LOGIC
+        // --- DELETED/TRASH PANEL SYSTEM ---
         async function loadTrashItems() {
             const grid = document.getElementById('trash-grid');
-            grid.innerHTML = "<h3 style='color:#666;'>SYNCING WITH FIREBASE...</h3>";
+            grid.innerHTML = "<h3 style='color:#666;'>SYNCING WITH DATABASE...</h3>";
+            
             const snap = await db.ref('content/movies').once('value');
             const data = snap.val();
             grid.innerHTML = "";
-            if(!data) { document.getElementById('db-count').innerText = "0"; return; }
+            
+            if(!data) { 
+                document.getElementById('db-count').innerText = "0"; 
+                return; 
+            }
+            
             const keys = Object.keys(data);
             document.getElementById('db-count').innerText = keys.length;
+            
+            // I-display ang huling 50 na inupload para pwedeng i-delete kung may mali
             keys.reverse().slice(0, 50).forEach(k => {
                 grid.innerHTML += `
                     <div class="item-card">
@@ -412,18 +471,22 @@
             });
         }
 
-        async function delOne(k) { if(confirm("PERMANENTLY DELETE THIS ITEM?")) db.ref(`content/movies/${k}`).remove().then(()=>loadTrashItems()); }
+        async function delOne(k) { 
+            if(confirm("PERMANENTLY DELETE THIS ITEM?")) {
+                db.ref(`content/movies/${k}`).remove().then(() => loadTrashItems());
+            }
+        }
 
         async function bulkDeleteByCat() {
             const cat = document.getElementById('trash-cat-select').value;
-            if(confirm(`WIPE OUT ALL CONTENT IN ${cat.toUpperCase()}?`)) {
+            if(confirm(`WIPE OUT ALL CONTENT IN ${cat.toUpperCase()}? (BABALA: HINDI ITO MAIBABALIK)`)) {
                 const snap = await db.ref('content/movies').orderByChild('category').equalTo(cat).once('value');
                 if(snap.exists()) {
                     let updates = {}; 
                     Object.keys(snap.val()).forEach(k => updates[k] = null);
                     await db.ref('content/movies').update(updates); 
                     loadTrashItems();
-                    alert(`ALL ${cat} DELETED!`);
+                    alert(`✅ ALL ${cat} CONTENT HAS BEEN WIPED!`);
                 } else {
                     alert("No content found in this category.");
                 }
@@ -447,7 +510,7 @@
                 if(count > 0) {
                     await db.ref('content/movies').update(updates); 
                     loadTrashItems();
-                    alert(`${count} items destroyed!`);
+                    alert(`🎯 ${count} items destroyed!`);
                 } else {
                     alert("No matches found.");
                 }
@@ -456,7 +519,7 @@
 
         function logout() { 
             localStorage.clear(); 
-            auth.signOut().then(()=>location.reload()); 
+            auth.signOut().then(() => location.reload()); 
         }
     </script>
 </body>
