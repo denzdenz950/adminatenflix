@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TENFLIX - ULTIMATE COMMAND CENTER V5</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <style>
+        :root { --n-red: #E50914; --bg: #0b0b0b; --panel: #181818; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; margin: 0; display: flex; height: 100vh; overflow: hidden; }
+        
+        /* Sidebar Styles */
+        .sidebar { width: 260px; background: #000; border-right: 1px solid #222; display: flex; flex-direction: column; padding: 20px 0; flex-shrink: 0; }
+        .logo { font-size: 26px; font-weight: bold; color: var(--n-red); text-align: center; margin-bottom: 30px; text-shadow: 0 0 10px rgba(229,9,20,0.4); }
+        .nav-item { padding: 12px 25px; color: #888; cursor: pointer; border-left: 4px solid transparent; transition: 0.3s; font-weight: 500; font-size: 13px; }
+        .nav-item:hover, .nav-item.active { background: #111; color: white; border-left-color: var(--n-red); }
+        .nav-group { color: #555; padding: 15px 25px 5px 25px; font-size: 10px; text-transform: uppercase; letter-spacing: 2px; }
+
+        /* Main Styles */
+        .main-content { flex-grow: 1; padding: 40px; overflow-y: auto; }
+        .panel-box { background: var(--panel); padding: 30px; border-radius: 12px; border: 1px solid #333; margin-bottom: 25px; }
+        
+        .input-dark { width: 100%; padding: 14px; margin-bottom: 15px; background: #252525; border: 1px solid #444; color: white; border-radius: 8px; outline: none; box-sizing: border-box; }
+        .btn { width: 100%; padding: 14px; border: none; color: white; font-weight: bold; border-radius: 8px; cursor: pointer; transition: 0.2s; margin-bottom: 10px; text-transform: uppercase; font-size: 11px; }
+        .btn-red { background: var(--n-red); }
+        .btn-blue { background: #007bff; }
+        .btn-green { background: #1db954; }
+        .btn-orange { background: #ff9800; color: #000; }
+        
+        .tab-section { display: none; }
+        .tab-active { display: block; animation: fadeInUp 0.4s ease; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Status & Grid */
+        #auto-status { background: #000; padding: 15px; font-family: monospace; font-size: 12px; color: #0f0; border: 1px solid #333; height: 150px; overflow-y: auto; border-radius: 10px; }
+        #manual-prompt { background: #222; padding: 25px; border-radius: 12px; border: 2px solid var(--n-red); margin-bottom: 20px; display: none; }
+        .item-card { background: #111; padding: 8px; border-radius: 8px; border: 1px solid #222; text-align: center; position: relative; }
+        .item-card img { width: 100%; height: 140px; object-fit: cover; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+    <div id="auth-screen" style="position:fixed; inset:0; background:#000; z-index:9999; display:flex; justify-content:center; align-items:center;">
+        <div style="background:#111; padding:40px; border-radius:15px; width:320px; text-align:center; border:1px solid #333;">
+            <h1 style="color:var(--n-red);">ADMIN LOGIN</h1>
+            <input type="email" id="adm-email" class="input-dark" placeholder="Email">
+            <input type="password" id="adm-pass" class="input-dark" placeholder="Password">
+            <button class="btn btn-red" onclick="login()">ENTER COMMAND CENTER</button>
+        </div>
+    </div>
+
+    <div class="sidebar">
+        <div class="logo">TENFLIX</div>
+        
+        <div class="nav-group">DEPLOYMENT</div>
+        <div class="nav-item active" onclick="switchTab('tab-auto', this)">🚀 Smart Deployment</div>
+        <div class="nav-item" onclick="switchTab('tab-manual', this)">🎬 Manual Entry</div>
+
+        <div class="nav-group">QUICK CATEGORIES</div>
+        <div class="nav-item" onclick="askBeforeTrend('movie', 'Movie', '27')">💀 Horror Movies</div>
+        <div class="nav-item" onclick="askBeforeTrend('movie', 'Movie', '', 'PH')">🇵🇭 Filipino Movies</div>
+        <div class="nav-item" onclick="askBeforeTrend('movie', 'Movie', '16')">🎠 Cartoons</div>
+        <div class="nav-item" onclick="askBeforeTrend('movie', 'Movie', '35')">😂 Comedy</div>
+        <div class="nav-item" onclick="askBeforeTrend('tv', 'Anime', '16')">㊙️ Anime Hub</div>
+
+        <div class="nav-group">DATABASE CONTROL</div>
+        <div class="nav-item" onclick="openTrashTab(this)" style="color:#ffb3b3;">🗑️ DELETED PANEL</div>
+        
+        <div style="flex-grow:1;"></div>
+        <div class="nav-item" onclick="logout()" style="color:#ff4444;">🚪 Logout</div>
+    </div>
+
+    <div class="main-content">
+        
+        <div id="tab-auto" class="tab-section tab-active">
+            <h2>🚀 Smart Content Deployment</h2>
+            <div class="panel-box">
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:20px;">
+                    <button class="btn btn-blue" onclick="askBeforeTrend('movie', 'Movie')">Trending Movies</button>
+                    <button class="btn btn-green" onclick="askBeforeTrend('tv', 'Anime', '210024')">New Anime</button>
+                    <button class="btn btn-orange" onclick="askBeforeTrend('tv', 'KDrama', 'ko')">Trending KDrama</button>
+                    <button class="btn btn-red" onclick="askBeforeTrend('tv', 'Series')">Western Series</button>
+                </div>
+
+                <div id="manual-prompt">
+                    <h3 id="prompt-title" style="margin:0;">Content Found</h3>
+                    <p style="font-size:12px; color:#888;">Duplicate Shield Active 🛡️ | Choose action:</p>
+                    <input type="text" id="manual-img-url" class="input-dark" placeholder="Paste Custom Thumbnail URL here (Optional)">
+                    <div style="display:flex; gap:10px;">
+                        <button class="btn btn-green" id="btn-proceed" style="flex:2;">🚀 PROCEED NOW</button>
+                        <button class="btn btn-red" onclick="cancelTrend()" style="flex:1;">CANCEL</button>
+                    </div>
+                </div>
+                <div id="auto-status">Status: Idle... Ready.</div>
+            </div>
+        </div>
+
+        <div id="tab-manual" class="tab-section">
+            <h2>🎬 Manual Entry</h2>
+            <div class="panel-box">
+                <input type="text" id="m-title" class="input-dark" placeholder="Final Title">
+                <input type="text" id="m-img" class="input-dark" placeholder="Thumbnail URL">
+                <input type="text" id="m-link" class="input-dark" placeholder="Video Embed Link">
+                <select id="m-cat" class="input-dark">
+                    <option value="Movie">Movie</option>
+                    <option value="Anime">Anime</option>
+                    <option value="Series">Series</option>
+                    <option value="KDrama">KDrama</option>
+                </select>
+                <button class="btn btn-red" onclick="postManual()">Post Item</button>
+            </div>
+        </div>
+
+        <div id="tab-trash" class="tab-section">
+            <h2 style="color:#ff4444;">🗑️ DELETED PANEL</h2>
+            <div class="panel-box" style="border-color:#ff4444;">
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:20px;">
+                    <div style="background:#222; padding:15px; border-radius:8px;">
+                        <span style="font-size:11px; color:#888;">BULK ERASE</span>
+                        <select id="trash-cat-select" class="input-dark" style="margin-top:5px;">
+                            <option value="Movie">All Movies</option>
+                            <option value="Anime">All Anime</option>
+                            <option value="KDrama">All KDrama</option>
+                            <option value="Series">All Series</option>
+                        </select>
+                        <button class="btn btn-red" onclick="bulkDeleteByCat()">🔥 WIPE CATEGORY</button>
+                    </div>
+                    <div style="background:#222; padding:15px; border-radius:8px;">
+                        <span style="font-size:11px; color:#888;">SEARCH & DESTROY</span>
+                        <input type="text" id="trash-search-input" class="input-dark" style="margin-top:5px;" placeholder="Search title to delete...">
+                        <button class="btn btn-orange" onclick="searchAndDestroy()">🎯 DELETE ALL FOUND</button>
+                    </div>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                    <span>Total Content: <b id="db-count">0</b></span>
+                    <button class="btn btn-blue" style="width:auto; padding:5px 15px;" onclick="loadTrashItems()">🔄 Refresh List</button>
+                </div>
+                <div id="trash-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap:15px; max-height:450px; overflow-y:auto; background:#000; padding:15px; border-radius:10px;"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const firebaseConfig = { 
+            apiKey: "AIzaSyCKuzGOLXVZWBtr94yZRN5MGb25Y8E3nqA", 
+            authDomain: "tenflixapp-a2e10.firebaseapp.com", 
+            databaseURL: "https://tenflixapp-a2e10-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "tenflixapp-a2e10", 
+            appId: "1:203297041422:web:04a89753898324a900a05f" 
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const auth = firebase.auth();
+        const TMDB_API = "87e915868818384adab881904faf148a";
+
+        // --- AUTH ---
+        auth.onAuthStateChanged(user => {
+            if(user && user.email === "keventv415@gmail.com") document.getElementById('auth-screen').style.display='none';
+            else {
+                const e = localStorage.getItem('ten_e'), p = localStorage.getItem('ten_p');
+                if(e && p) auth.signInWithEmailAndPassword(e, p).catch(()=>localStorage.clear());
+            }
+        });
+
+        function login() {
+            const e = document.getElementById('adm-email').value, p = document.getElementById('adm-pass').value;
+            auth.signInWithEmailAndPassword(e, p).then(() => {
+                localStorage.setItem('ten_e', e); localStorage.setItem('ten_p', p);
+            });
+        }
+
+        function switchTab(id, el) {
+            document.querySelectorAll('.tab-section').forEach(t => t.classList.remove('tab-active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById(id).classList.add('tab-active');
+            el.classList.add('active');
+        }
+
+        function openTrashTab(el) {
+            switchTab('tab-trash', el);
+            loadTrashItems();
+        }
+
+        // --- DEPLOYMENT ENGINE (DUPLICATE SHIELD) ---
+        async function askBeforeTrend(type, label, genreId = "", origin = "") {
+            switchTab('tab-auto', document.querySelectorAll('.nav-item')[0]);
+            const status = document.getElementById('auto-status');
+            status.innerHTML = `🔍 Scanning TMDB for ${label}...`;
+            
+            const randomPage = Math.floor(Math.random() * 20) + 1;
+            let url = `https://api.themoviedb.org/3/discover/${type}?api_key=${TMDB_API}&page=${randomPage}`;
+            if(genreId) url += `&with_genres=${genreId}`;
+            if(origin) url += `&with_origin_country=${origin}`;
+            if(label === 'KDrama') url += `&with_original_language=ko`;
+            if(label === 'Anime') url += `&with_original_language=ja`;
+
+            const res = await fetch(url);
+            const data = await res.json();
+            
+            let targetItem = null;
+            for (let item of data.results) {
+                const title = item.name || item.title;
+                const check = await db.ref('content/movies').orderByChild('title').equalTo(type === 'movie' ? title : `${title} - S1 E1`).once('value');
+                if (!check.exists()) { targetItem = item; break; }
+            }
+
+            if(targetItem) {
+                document.getElementById('prompt-title').innerText = `Target: ${targetItem.name || targetItem.title}`;
+                document.getElementById('manual-prompt').style.display = 'block';
+                document.getElementById('manual-img-url').value = "";
+                document.getElementById('btn-proceed').onclick = () => executeTrend(targetItem, type, label, document.getElementById('manual-img-url').value);
+            } else {
+                status.innerHTML = `⚠️ Page ${randomPage} is already in your database. Click again to shuffle!`;
+            }
+        }
+
+        async function executeTrend(item, type, label, customImg) {
+            document.getElementById('manual-prompt').style.display = 'none';
+            const status = document.getElementById('auto-status');
+            const poster = customImg || `https://image.tmdb.org/t/p/w500${item.poster_path}`;
+            const title = item.name || item.title;
+
+            if(type === 'movie') {
+                await db.ref('content/movies').push({ title, img: poster, link: `https://vidsrc.me/embed/movie?tmdb=${item.id}`, category: 'Movie', views: 0 });
+                status.innerHTML = `✅ ${title} Posted!`;
+            } else {
+                status.innerHTML = `🚀 Extracting Season 1 for ${title}...<br>`;
+                const sRes = await fetch(`https://api.themoviedb.org/3/tv/${item.id}/season/1?api_key=${TMDB_API}`);
+                const sData = await sRes.json();
+                for(let ep of sData.episodes) {
+                    await db.ref('content/movies').push({ title: `${title} - S1 E${ep.episode_number}`, img: poster, link: `https://vidsrc.me/embed/tv?tmdb=${item.id}&season=1&episode=${ep.episode_number}`, category: label, views: 0 });
+                    status.innerHTML += `📦 E${ep.episode_number} Posted...<br>`;
+                }
+                status.innerHTML += `✨ Deployment Finished!`;
+            }
+        }
+
+        function cancelTrend() { document.getElementById('manual-prompt').style.display = 'none'; }
+
+        function postManual() {
+            const t = document.getElementById('m-title').value, i = document.getElementById('m-img').value, l = document.getElementById('m-link').value, c = document.getElementById('m-cat').value;
+            db.ref('content/movies').push({ title: t, img: i, link: l, category: c, views: 0 }).then(() => alert("Posted!"));
+        }
+
+        // --- DELETED PANEL FUNCTIONS ---
+        async function loadTrashItems() {
+            const grid = document.getElementById('trash-grid');
+            grid.innerHTML = "⏳ Loading...";
+            const snap = await db.ref('content/movies').once('value');
+            const data = snap.val();
+            grid.innerHTML = "";
+            if(!data) { document.getElementById('db-count').innerText = "0"; return; }
+            const keys = Object.keys(data);
+            document.getElementById('db-count').innerText = keys.length;
+            keys.reverse().slice(0, 100).forEach(k => {
+                grid.innerHTML += `<div class="item-card"><button onclick="delOne('${k}')" style="position:absolute;top:2px;right:2px;background:red;color:white;border:none;border-radius:50%;width:18px;height:18px;cursor:pointer;font-size:10px;">✕</button><img src="${data[k].img}"><p style="font-size:9px;margin:5px 0;">${data[k].title}</p></div>`;
+            });
+        }
+
+        async function delOne(k) { if(confirm("Erase this?")) db.ref(`content/movies/${k}`).remove().then(()=>loadTrashItems()); }
+
+        async function bulkDeleteByCat() {
+            const cat = document.getElementById('trash-cat-select').value;
+            if(confirm(`WIPE ALL ${cat}?`)) {
+                const snap = await db.ref('content/movies').orderByChild('category').equalTo(cat).once('value');
+                if(snap.exists()) {
+                    let updates = {}; Object.keys(snap.val()).forEach(k => updates[k] = null);
+                    await db.ref('content/movies').update(updates); loadTrashItems();
+                }
+            }
+        }
+
+        async function searchAndDestroy() {
+            const q = document.getElementById('trash-search-input').value.toLowerCase();
+            if(!q) return;
+            if(confirm(`Delete all matching "${q}"?`)) {
+                const snap = await db.ref('content/movies').once('value');
+                const data = snap.val();
+                let updates = {};
+                Object.keys(data).forEach(k => { if(data[k].title.toLowerCase().includes(q)) updates[k] = null; });
+                await db.ref('content/movies').update(updates); loadTrashItems();
+            }
+        }
+
+        function logout() { localStorage.clear(); auth.signOut().then(()=>location.reload()); }
+    </script>
+</body>
+</html>
