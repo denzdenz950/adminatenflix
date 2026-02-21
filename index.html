@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TENFLIX - ULTIMATE COMMAND CENTER V5</title>
+    <title>TENFLIX - DESKTOP COMMAND CENTER V6</title>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
@@ -11,141 +11,276 @@
 
     <style>
         :root { --n-red: #E50914; --bg: #0b0b0b; --panel: #181818; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; margin: 0; display: flex; height: 100vh; overflow: hidden; }
         
-        /* Sidebar Styles */
-        .sidebar { width: 260px; background: #000; border-right: 1px solid #222; display: flex; flex-direction: column; padding: 20px 0; flex-shrink: 0; }
-        .logo { font-size: 26px; font-weight: bold; color: var(--n-red); text-align: center; margin-bottom: 30px; text-shadow: 0 0 10px rgba(229,9,20,0.4); }
-        .nav-item { padding: 12px 25px; color: #888; cursor: pointer; border-left: 4px solid transparent; transition: 0.3s; font-weight: 500; font-size: 13px; }
-        .nav-item:hover, .nav-item.active { background: #111; color: white; border-left-color: var(--n-red); }
-        .nav-group { color: #555; padding: 15px 25px 5px 25px; font-size: 10px; text-transform: uppercase; letter-spacing: 2px; }
+        /* DESKTOP OPTIMIZED LAYOUT */
+        body { 
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+            background: var(--bg); 
+            color: white; 
+            margin: 0; 
+            display: flex; 
+            height: 100vh; 
+            overflow: hidden;
+        }
+        
+        /* SIDEBAR - Fixed Width for Desktop */
+        .sidebar { 
+            width: 280px; 
+            background: #000; 
+            border-right: 1px solid #222; 
+            display: flex; 
+            flex-direction: column; 
+            padding: 30px 0; 
+            flex-shrink: 0; 
+        }
+        
+        .logo { 
+            font-size: 32px; 
+            font-weight: 900; 
+            color: var(--n-red); 
+            text-align: center; 
+            margin-bottom: 40px; 
+            letter-spacing: 2px;
+            text-shadow: 0 0 15px rgba(229,9,20,0.5);
+        }
 
-        /* Main Styles */
-        .main-content { flex-grow: 1; padding: 40px; overflow-y: auto; }
-        .panel-box { background: var(--panel); padding: 30px; border-radius: 12px; border: 1px solid #333; margin-bottom: 25px; }
+        .nav-group { 
+            color: #444; 
+            padding: 20px 30px 10px 30px; 
+            font-size: 11px; 
+            text-transform: uppercase; 
+            letter-spacing: 2px; 
+            font-weight: bold;
+        }
+
+        .nav-item { 
+            padding: 15px 30px; 
+            color: #999; 
+            cursor: pointer; 
+            border-left: 5px solid transparent; 
+            transition: all 0.3s ease; 
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-item:hover, .nav-item.active { 
+            background: linear-gradient(90deg, #141414 0%, #000 100%); 
+            color: white; 
+            border-left-color: var(--n-red); 
+        }
+
+        /* MAIN CONTENT - Expands for Desktop Monitors */
+        .main-content { 
+            flex-grow: 1; 
+            padding: 50px; 
+            overflow-y: auto; 
+            background: radial-gradient(circle at top right, #1a1a1a, #0b0b0b);
+        }
+
+        h2 { font-size: 28px; margin-bottom: 30px; font-weight: 700; }
+
+        .panel-box { 
+            background: var(--panel); 
+            padding: 40px; 
+            border-radius: 15px; 
+            border: 1px solid #2a2a2a; 
+            margin-bottom: 30px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
         
-        .input-dark { width: 100%; padding: 14px; margin-bottom: 15px; background: #252525; border: 1px solid #444; color: white; border-radius: 8px; outline: none; box-sizing: border-box; }
-        .btn { width: 100%; padding: 14px; border: none; color: white; font-weight: bold; border-radius: 8px; cursor: pointer; transition: 0.2s; margin-bottom: 10px; text-transform: uppercase; font-size: 11px; }
+        /* FORM GRID FOR DESKTOP */
+        .desktop-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .input-dark { 
+            width: 100%; 
+            padding: 16px; 
+            background: #222; 
+            border: 1px solid #333; 
+            color: white; 
+            border-radius: 10px; 
+            outline: none; 
+            box-sizing: border-box;
+            font-size: 14px;
+            transition: 0.3s;
+        }
+
+        .input-dark:focus { border-color: var(--n-red); background: #282828; }
+
+        .btn { 
+            padding: 18px; 
+            border: none; 
+            color: white; 
+            font-weight: bold; 
+            border-radius: 10px; 
+            cursor: pointer; 
+            transition: 0.3s transform, 0.3s background; 
+            text-transform: uppercase; 
+            font-size: 13px;
+            letter-spacing: 1px;
+        }
+
+        .btn:hover { transform: translateY(-2px); filter: brightness(1.2); }
         .btn-red { background: var(--n-red); }
         .btn-blue { background: #007bff; }
         .btn-green { background: #1db954; }
         .btn-orange { background: #ff9800; color: #000; }
         
         .tab-section { display: none; }
-        .tab-active { display: block; animation: fadeInUp 0.4s ease; }
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .tab-active { display: block; animation: fadeIn 0.5s ease; }
 
-        /* Status & Grid */
-        #auto-status { background: #000; padding: 15px; font-family: monospace; font-size: 12px; color: #0f0; border: 1px solid #333; height: 150px; overflow-y: auto; border-radius: 10px; }
-        #manual-prompt { background: #222; padding: 25px; border-radius: 12px; border: 2px solid var(--n-red); margin-bottom: 20px; display: none; }
-        .item-card { background: #111; padding: 8px; border-radius: 8px; border: 1px solid #222; text-align: center; position: relative; }
-        .item-card img { width: 100%; height: 140px; object-fit: cover; border-radius: 4px; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* STATUS BOX - Larger for Desktop */
+        #auto-status { 
+            background: #000; 
+            padding: 20px; 
+            font-family: 'Courier New', monospace; 
+            font-size: 14px; 
+            color: #00ff41; 
+            border: 1px solid #333; 
+            height: 250px; 
+            overflow-y: auto; 
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+
+        /* TRASH GRID - Desktop Optimization */
+        #trash-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); 
+            gap: 25px; 
+            margin-top: 20px;
+        }
+
+        .item-card { 
+            background: #222; 
+            padding: 12px; 
+            border-radius: 12px; 
+            border: 1px solid #333; 
+            transition: 0.3s;
+        }
+
+        .item-card:hover { border-color: var(--n-red); transform: scale(1.05); }
+
+        .item-card img { width: 100%; height: 250px; object-fit: cover; border-radius: 8px; }
     </style>
 </head>
 <body>
 
     <div id="auth-screen" style="position:fixed; inset:0; background:#000; z-index:9999; display:flex; justify-content:center; align-items:center;">
-        <div style="background:#111; padding:40px; border-radius:15px; width:320px; text-align:center; border:1px solid #333;">
-            <h1 style="color:var(--n-red);">ADMIN LOGIN</h1>
-            <input type="email" id="adm-email" class="input-dark" placeholder="Email">
+        <div style="background:#111; padding:60px; border-radius:20px; width:400px; text-align:center; border:1px solid #333;">
+            <div class="logo">TENFLIX</div>
+            <h2 style="font-size:18px; color:#666;">ADMIN DESKTOP ACCESS</h2>
+            <input type="email" id="adm-email" class="input-dark" style="margin-top:20px;" placeholder="Admin Email">
             <input type="password" id="adm-pass" class="input-dark" placeholder="Password">
-            <button class="btn btn-red" onclick="login()">ENTER COMMAND CENTER</button>
+            <button class="btn btn-red" style="width:100%;" onclick="login()">AUTHORIZE ACCESS</button>
         </div>
     </div>
 
     <div class="sidebar">
         <div class="logo">TENFLIX</div>
         
-        <div class="nav-group">DEPLOYMENT</div>
-        <div class="nav-item active" onclick="switchTab('tab-auto', this)">🚀 Smart Deployment</div>
+        <div class="nav-group">MANAGEMENT</div>
+        <div class="nav-item active" onclick="switchTab('tab-auto', this)">🚀 Deployment Engine</div>
         <div class="nav-item" onclick="switchTab('tab-manual', this)">🎬 Manual Entry</div>
 
-        <div class="nav-group">QUICK CATEGORIES</div>
-        <div class="nav-item" onclick="askBeforeTrend('movie', 'Movie', '27')">💀 Horror Movies</div>
-        <div class="nav-item" onclick="askBeforeTrend('movie', 'Movie', '', 'PH')">🇵🇭 Filipino Movies</div>
+        <div class="nav-group">PULL CONTENT</div>
+        <div class="nav-item" onclick="askBeforeTrend('movie', 'Movie', '27')">💀 Horror</div>
+        <div class="nav-item" onclick="askBeforeTrend('movie', 'Movie', '', 'PH')">🇵🇭 Filipino</div>
         <div class="nav-item" onclick="askBeforeTrend('movie', 'Movie', '16')">🎠 Cartoons</div>
-        <div class="nav-item" onclick="askBeforeTrend('movie', 'Movie', '35')">😂 Comedy</div>
-        <div class="nav-item" onclick="askBeforeTrend('tv', 'Anime', '16')">㊙️ Anime Hub</div>
+        <div class="nav-item" onclick="askBeforeTrend('tv', 'Anime', '16')">㊙️ Anime</div>
 
-        <div class="nav-group">DATABASE CONTROL</div>
-        <div class="nav-item" onclick="openTrashTab(this)" style="color:#ffb3b3;">🗑️ DELETED PANEL</div>
+        <div class="nav-group">SYSTEM</div>
+        <div class="nav-item" onclick="openTrashTab(this)" style="color:#ff6b6b;">🗑️ DELETED PANEL</div>
         
         <div style="flex-grow:1;"></div>
-        <div class="nav-item" onclick="logout()" style="color:#ff4444;">🚪 Logout</div>
+        <div class="nav-item" onclick="logout()" style="color:#ff4444; border-top:1px solid #222;">🚪 LOGOUT SYSTEM</div>
     </div>
 
     <div class="main-content">
         
         <div id="tab-auto" class="tab-section tab-active">
-            <h2>🚀 Smart Content Deployment</h2>
+            <h2>🚀 Smart Deployment Engine</h2>
             <div class="panel-box">
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:20px;">
-                    <button class="btn btn-blue" onclick="askBeforeTrend('movie', 'Movie')">Trending Movies</button>
-                    <button class="btn btn-green" onclick="askBeforeTrend('tv', 'Anime', '210024')">New Anime</button>
-                    <button class="btn btn-orange" onclick="askBeforeTrend('tv', 'KDrama', 'ko')">Trending KDrama</button>
-                    <button class="btn btn-red" onclick="askBeforeTrend('tv', 'Series')">Western Series</button>
+                <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:15px; margin-bottom:30px;">
+                    <button class="btn btn-blue" onclick="askBeforeTrend('movie', 'Movie')">TRENDING MOVIES</button>
+                    <button class="btn btn-green" onclick="askBeforeTrend('tv', 'Anime', '210024')">NEW ANIME</button>
+                    <button class="btn btn-orange" onclick="askBeforeTrend('tv', 'KDrama', 'ko')">K-DRAMA</button>
+                    <button class="btn btn-red" onclick="askBeforeTrend('tv', 'Series')">WESTERN SERIES</button>
                 </div>
 
-                <div id="manual-prompt">
-                    <h3 id="prompt-title" style="margin:0;">Content Found</h3>
-                    <p style="font-size:12px; color:#888;">Duplicate Shield Active 🛡️ | Choose action:</p>
-                    <input type="text" id="manual-img-url" class="input-dark" placeholder="Paste Custom Thumbnail URL here (Optional)">
-                    <div style="display:flex; gap:10px;">
-                        <button class="btn btn-green" id="btn-proceed" style="flex:2;">🚀 PROCEED NOW</button>
-                        <button class="btn btn-red" onclick="cancelTrend()" style="flex:1;">CANCEL</button>
+                <div id="manual-prompt" style="border: 2px solid var(--n-red); background: #111; padding: 30px; border-radius: 15px; display: none;">
+                    <h3 id="prompt-title" style="margin:0; font-size: 22px;">Content Identified</h3>
+                    <p style="color:#888;">Siguraduhin ang thumbnail bago i-push sa database:</p>
+                    <input type="text" id="manual-img-url" class="input-dark" placeholder="Paste Custom Thumbnail URL (Optional)">
+                    <div style="display:flex; gap:15px; margin-top:10px;">
+                        <button class="btn btn-green" id="btn-proceed" style="flex:3; font-size:16px;">🚀 DEPLOY TO LIVE DATABASE</button>
+                        <button class="btn btn-red" onclick="cancelTrend()" style="flex:1;">ABORT</button>
                     </div>
                 </div>
-                <div id="auto-status">Status: Idle... Ready.</div>
+
+                <div id="auto-status">READY FOR NEW COMMAND...</div>
             </div>
         </div>
 
         <div id="tab-manual" class="tab-section">
-            <h2>🎬 Manual Entry</h2>
+            <h2>🎬 Desktop Manual Post</h2>
             <div class="panel-box">
-                <input type="text" id="m-title" class="input-dark" placeholder="Final Title">
-                <input type="text" id="m-img" class="input-dark" placeholder="Thumbnail URL">
-                <input type="text" id="m-link" class="input-dark" placeholder="Video Embed Link">
-                <select id="m-cat" class="input-dark">
-                    <option value="Movie">Movie</option>
-                    <option value="Anime">Anime</option>
-                    <option value="Series">Series</option>
-                    <option value="KDrama">KDrama</option>
-                </select>
-                <button class="btn btn-red" onclick="postManual()">Post Item</button>
+                <div class="desktop-grid">
+                    <input type="text" id="m-title" class="input-dark" placeholder="Movie/Series Title">
+                    <select id="m-cat" class="input-dark">
+                        <option value="Movie">Category: Movie</option>
+                        <option value="Anime">Category: Anime</option>
+                        <option value="Series">Category: Series</option>
+                        <option value="KDrama">Category: KDrama</option>
+                    </select>
+                    <input type="text" id="m-img" class="input-dark" placeholder="Thumbnail URL">
+                    <input type="text" id="m-link" class="input-dark" placeholder="Embed Video Link">
+                </div>
+                <button class="btn btn-red" style="width:100%; margin-top:20px;" onclick="postManual()">PUBLISH TO TENFLIX</button>
             </div>
         </div>
 
         <div id="tab-trash" class="tab-section">
-            <h2 style="color:#ff4444;">🗑️ DELETED PANEL</h2>
+            <h2 style="color:#ff4444;">🗑️ DELETED COMMAND PANEL</h2>
             <div class="panel-box" style="border-color:#ff4444;">
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:20px;">
-                    <div style="background:#222; padding:15px; border-radius:8px;">
-                        <span style="font-size:11px; color:#888;">BULK ERASE</span>
-                        <select id="trash-cat-select" class="input-dark" style="margin-top:5px;">
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-bottom:30px;">
+                    <div style="background:#222; padding:25px; border-radius:12px;">
+                        <span style="font-size:12px; color:#888; letter-spacing:1px;">BULK WIPE BY CATEGORY</span>
+                        <select id="trash-cat-select" class="input-dark" style="margin-top:10px;">
                             <option value="Movie">All Movies</option>
                             <option value="Anime">All Anime</option>
                             <option value="KDrama">All KDrama</option>
                             <option value="Series">All Series</option>
                         </select>
-                        <button class="btn btn-red" onclick="bulkDeleteByCat()">🔥 WIPE CATEGORY</button>
+                        <button class="btn btn-red" onclick="bulkDeleteByCat()">🔥 WIPE ENTIRE CATEGORY</button>
                     </div>
-                    <div style="background:#222; padding:15px; border-radius:8px;">
-                        <span style="font-size:11px; color:#888;">SEARCH & DESTROY</span>
-                        <input type="text" id="trash-search-input" class="input-dark" style="margin-top:5px;" placeholder="Search title to delete...">
-                        <button class="btn btn-orange" onclick="searchAndDestroy()">🎯 DELETE ALL FOUND</button>
+                    <div style="background:#222; padding:25px; border-radius:12px;">
+                        <span style="font-size:12px; color:#888; letter-spacing:1px;">SEARCH & DESTROY</span>
+                        <input type="text" id="trash-search-input" class="input-dark" style="margin-top:10px;" placeholder="Search exact title to delete...">
+                        <button class="btn btn-orange" onclick="searchAndDestroy()">🎯 DESTROY MATCHES</button>
                     </div>
                 </div>
-                <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                    <span>Total Content: <b id="db-count">0</b></span>
-                    <button class="btn btn-blue" style="width:auto; padding:5px 15px;" onclick="loadTrashItems()">🔄 Refresh List</button>
+                
+                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #333; padding-bottom:15px;">
+                    <span style="font-size:18px;">Total Database Count: <b id="db-count" style="color:var(--n-red);">0</b></span>
+                    <button class="btn btn-blue" style="width:auto; padding:10px 30px;" onclick="loadTrashItems()">🔄 SYNC LIST</button>
                 </div>
-                <div id="trash-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap:15px; max-height:450px; overflow-y:auto; background:#000; padding:15px; border-radius:10px;"></div>
+
+                <div id="trash-grid" style="max-height:600px; overflow-y:auto; padding-top:20px;"></div>
             </div>
         </div>
 
     </div>
 
     <script>
+        // FIREBASE & TMDB CONFIG
         const firebaseConfig = { 
             apiKey: "AIzaSyCKuzGOLXVZWBtr94yZRN5MGb25Y8E3nqA", 
             authDomain: "tenflixapp-a2e10.firebaseapp.com", 
@@ -158,7 +293,7 @@
         const auth = firebase.auth();
         const TMDB_API = "87e915868818384adab881904faf148a";
 
-        // --- AUTH ---
+        // AUTH SYSTEM
         auth.onAuthStateChanged(user => {
             if(user && user.email === "keventv415@gmail.com") document.getElementById('auth-screen').style.display='none';
             else {
@@ -174,6 +309,7 @@
             });
         }
 
+        // NAVIGATION
         function switchTab(id, el) {
             document.querySelectorAll('.tab-section').forEach(t => t.classList.remove('tab-active'));
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -186,11 +322,11 @@
             loadTrashItems();
         }
 
-        // --- DEPLOYMENT ENGINE (DUPLICATE SHIELD) ---
+        // DEPLOYMENT LOGIC
         async function askBeforeTrend(type, label, genreId = "", origin = "") {
             switchTab('tab-auto', document.querySelectorAll('.nav-item')[0]);
             const status = document.getElementById('auto-status');
-            status.innerHTML = `🔍 Scanning TMDB for ${label}...`;
+            status.innerHTML = `SCANNING TMDB DATA FOR ${label.toUpperCase()}...`;
             
             const randomPage = Math.floor(Math.random() * 20) + 1;
             let url = `https://api.themoviedb.org/3/discover/${type}?api_key=${TMDB_API}&page=${randomPage}`;
@@ -210,12 +346,13 @@
             }
 
             if(targetItem) {
-                document.getElementById('prompt-title').innerText = `Target: ${targetItem.name || targetItem.title}`;
+                document.getElementById('prompt-title').innerText = `TARGET ACQUIRED: ${targetItem.name || targetItem.title}`;
                 document.getElementById('manual-prompt').style.display = 'block';
                 document.getElementById('manual-img-url').value = "";
                 document.getElementById('btn-proceed').onclick = () => executeTrend(targetItem, type, label, document.getElementById('manual-img-url').value);
             } else {
-                status.innerHTML = `⚠️ Page ${randomPage} is already in your database. Click again to shuffle!`;
+                status.innerHTML = `⚠️ ALL CONTENT ON PAGE ${randomPage} ALREADY EXISTS. RE-SCANNING...`;
+                setTimeout(() => askBeforeTrend(type, label, genreId, origin), 1500);
             }
         }
 
@@ -227,16 +364,17 @@
 
             if(type === 'movie') {
                 await db.ref('content/movies').push({ title, img: poster, link: `https://vidsrc.me/embed/movie?tmdb=${item.id}`, category: 'Movie', views: 0 });
-                status.innerHTML = `✅ ${title} Posted!`;
+                status.innerHTML = `✅ [MOVIE] ${title.toUpperCase()} DEPLOYED SUCCESSFULLY.`;
             } else {
-                status.innerHTML = `🚀 Extracting Season 1 for ${title}...<br>`;
+                status.innerHTML = `🚀 DEPLOYING SERIES: ${title.toUpperCase()} (SEASON 1)...<br>`;
                 const sRes = await fetch(`https://api.themoviedb.org/3/tv/${item.id}/season/1?api_key=${TMDB_API}`);
                 const sData = await sRes.json();
                 for(let ep of sData.episodes) {
                     await db.ref('content/movies').push({ title: `${title} - S1 E${ep.episode_number}`, img: poster, link: `https://vidsrc.me/embed/tv?tmdb=${item.id}&season=1&episode=${ep.episode_number}`, category: label, views: 0 });
-                    status.innerHTML += `📦 E${ep.episode_number} Posted...<br>`;
+                    status.innerHTML += `📦 EPISODE ${ep.episode_number} COMMITTED.<br>`;
+                    status.scrollTop = status.scrollHeight;
                 }
-                status.innerHTML += `✨ Deployment Finished!`;
+                status.innerHTML += `✨ FULL SEASON LIVE.`;
             }
         }
 
@@ -244,50 +382,82 @@
 
         function postManual() {
             const t = document.getElementById('m-title').value, i = document.getElementById('m-img').value, l = document.getElementById('m-link').value, c = document.getElementById('m-cat').value;
-            db.ref('content/movies').push({ title: t, img: i, link: l, category: c, views: 0 }).then(() => alert("Posted!"));
+            if(!t || !l) return alert("Fill up Title and Link!");
+            db.ref('content/movies').push({ title: t, img: i, link: l, category: c, views: 0 }).then(() => {
+                alert("Posted Manual Content!");
+                document.getElementById('m-title').value = "";
+                document.getElementById('m-img').value = "";
+                document.getElementById('m-link').value = "";
+            });
         }
 
-        // --- DELETED PANEL FUNCTIONS ---
+        // DELETED PANEL LOGIC
         async function loadTrashItems() {
             const grid = document.getElementById('trash-grid');
-            grid.innerHTML = "⏳ Loading...";
+            grid.innerHTML = "<h3 style='color:#666;'>SYNCING WITH FIREBASE...</h3>";
             const snap = await db.ref('content/movies').once('value');
             const data = snap.val();
             grid.innerHTML = "";
             if(!data) { document.getElementById('db-count').innerText = "0"; return; }
             const keys = Object.keys(data);
             document.getElementById('db-count').innerText = keys.length;
-            keys.reverse().slice(0, 100).forEach(k => {
-                grid.innerHTML += `<div class="item-card"><button onclick="delOne('${k}')" style="position:absolute;top:2px;right:2px;background:red;color:white;border:none;border-radius:50%;width:18px;height:18px;cursor:pointer;font-size:10px;">✕</button><img src="${data[k].img}"><p style="font-size:9px;margin:5px 0;">${data[k].title}</p></div>`;
+            keys.reverse().slice(0, 50).forEach(k => {
+                grid.innerHTML += `
+                    <div class="item-card">
+                        <button onclick="delOne('${k}')" style="position:absolute;top:5px;right:5px;background:var(--n-red);color:white;border:none;border-radius:50%;width:25px;height:25px;cursor:pointer;font-weight:bold;z-index:2;">✕</button>
+                        <img src="${data[k].img || 'https://via.placeholder.com/200x300'}">
+                        <p style="font-size:11px; margin-top:10px; height:35px; overflow:hidden;">${data[k].title}</p>
+                        <span style="font-size:10px; color:#555;">${data[k].category}</span>
+                    </div>`;
             });
         }
 
-        async function delOne(k) { if(confirm("Erase this?")) db.ref(`content/movies/${k}`).remove().then(()=>loadTrashItems()); }
+        async function delOne(k) { if(confirm("PERMANENTLY DELETE THIS ITEM?")) db.ref(`content/movies/${k}`).remove().then(()=>loadTrashItems()); }
 
         async function bulkDeleteByCat() {
             const cat = document.getElementById('trash-cat-select').value;
-            if(confirm(`WIPE ALL ${cat}?`)) {
+            if(confirm(`WIPE OUT ALL CONTENT IN ${cat.toUpperCase()}?`)) {
                 const snap = await db.ref('content/movies').orderByChild('category').equalTo(cat).once('value');
                 if(snap.exists()) {
-                    let updates = {}; Object.keys(snap.val()).forEach(k => updates[k] = null);
-                    await db.ref('content/movies').update(updates); loadTrashItems();
+                    let updates = {}; 
+                    Object.keys(snap.val()).forEach(k => updates[k] = null);
+                    await db.ref('content/movies').update(updates); 
+                    loadTrashItems();
+                    alert(`ALL ${cat} DELETED!`);
+                } else {
+                    alert("No content found in this category.");
                 }
             }
         }
 
         async function searchAndDestroy() {
             const q = document.getElementById('trash-search-input').value.toLowerCase();
-            if(!q) return;
-            if(confirm(`Delete all matching "${q}"?`)) {
+            if(!q) return alert("Type a title first!");
+            if(confirm(`ERASE ALL ITEMS MATCHING "${q}"?`)) {
                 const snap = await db.ref('content/movies').once('value');
                 const data = snap.val();
                 let updates = {};
-                Object.keys(data).forEach(k => { if(data[k].title.toLowerCase().includes(q)) updates[k] = null; });
-                await db.ref('content/movies').update(updates); loadTrashItems();
+                let count = 0;
+                Object.keys(data).forEach(k => { 
+                    if(data[k].title.toLowerCase().includes(q)) {
+                        updates[k] = null;
+                        count++;
+                    }
+                });
+                if(count > 0) {
+                    await db.ref('content/movies').update(updates); 
+                    loadTrashItems();
+                    alert(`${count} items destroyed!`);
+                } else {
+                    alert("No matches found.");
+                }
             }
         }
 
-        function logout() { localStorage.clear(); auth.signOut().then(()=>location.reload()); }
+        function logout() { 
+            localStorage.clear(); 
+            auth.signOut().then(()=>location.reload()); 
+        }
     </script>
 </body>
 </html>
